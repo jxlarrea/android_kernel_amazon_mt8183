@@ -1,0 +1,244 @@
+/*
+ * Copyright (C) 2018 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.  */
+
+/*
+ * Copyright (C) 2020 Amazon.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ */
+
+#include "theia.dtsi"
+#include <dt-bindings/clock/mt8183-clk.h>
+
+/ {
+	aliases {
+		mute_led_pwm = &pwm;
+	};
+};
+
+&volumeup_button {
+	gpios = <&pio 93 GPIO_ACTIVE_LOW>;
+};
+
+&gpio_keys_default {
+	pins_cmd_dat_low {
+		pinmux = <PINMUX_GPIO92__FUNC_GPIO92>,
+			<PINMUX_GPIO93__FUNC_GPIO93>;
+		input-enable;
+		slew-rate = <0>;
+		bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
+	};
+
+	pins_amp_int_l {
+		pins = <PINMUX_GPIO61__FUNC_GPIO61>;
+		bias-disable;
+	};
+};
+
+&theia_control {
+	amzn,motion-power-gpio = <&pio 4 GPIO_ACTIVE_HIGH>;
+};
+
+&spi4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_pins_4>;
+	status = "okay";
+};
+
+&i2c0 {
+	gt9xx@5d {
+		compatible = "goodix,gt9xx";
+		reg = <0x5d>;
+		irq-flags = <2>;
+		int-gpio = <&pio 155 GPIO_ACTIVE_LOW>;
+		rst-gpio = <&pio 158 GPIO_ACTIVE_LOW>;
+		touchscreen-max-id = <11>;
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <1280>;
+		touchscreen-max-w = <512>;
+		touchscreen-max-p = <512>;
+		goodix,slide-wakeup = <0>;
+		goodix,type-a-report = <0>;
+		goodix,driver-send-cfg = <0>;
+		goodix,resume-in-workqueue = <0>;
+		goodix,int-sync = <1>;
+		goodix,swap-x2y = <1>;
+		goodix,esd-protect = <1>;
+		goodix,auto-update-cfg = <1>;
+		goodix,auto-update = <1>;
+		goodix,power-off-sleep = <1>;
+		goodix,pen-suppress-finger = <0>;
+		status = "okay";
+	};
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	tcs3400: tcs3400@29 {
+		compatible = "ams,tcs3400";
+		reg = <0x29>;
+		interrupt-parent = <&pio>;
+		interrupts = <9 IRQ_TYPE_LEVEL_LOW 9 0>;
+		als_name = "tcs3400_als";
+		als_persist = <0>;
+		als_gain = <3>;
+		als_auto_gain = <1>;
+		als_deltap = <10>;
+		als_time = <4>;
+		als_can_wake = <0>;
+	};
+};
+
+&i2c2 {
+	camera_main_eeprom_mtk: camera_main_eeprom@54 {
+		compatible = "mediatek,camera_main_eeprom";
+		reg = <0x54>;
+		status = "okay";
+	};
+};
+
+&i2c4 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	/* accelerometer */
+	bma456_i2c4_18: bma456@18 {
+		compatible = "bma4xy";
+		reg = <0x18>;
+		interrupt-parent = <&pio>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bma456_mlb_int>;
+		interrupts = <59 IRQ_TYPE_LEVEL_LOW 59 0>;
+	};
+};
+
+&i2c5 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c_pins_5>;
+
+	/* accelerometer */
+	bma456_i2c5_18: bma456@18 {
+		compatible = "bma4xy";
+		reg = <0x18>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bma456_iob_int>;
+	};
+
+	/* TI smart AMP */
+	/delete-node/ tas5805m@2c;
+
+	/* TI smart AMP */
+	tas5805m: tas5805m@2d {
+		compatible = "ti,tas5805m";
+		reg = <0x2d>;
+		reset-gpio = <&pio 37 0>;
+		status = "okay";
+	};
+
+	/* Temperature sensor TMP1075 */
+	tmp1075_i2c5_5a: tmp1075@5a {
+		compatible = "lm75,tmp75";
+		reg = <0x5a>;
+		temp_check_low_limit = <60000>;
+		temp_check_high_limit = <87000>;
+		status = "okay";
+	};
+};
+
+&pio {
+	i2c_pins_5: i2c5@0 {
+		pins_i2c {
+			pinmux = <PINMUX_GPIO48__FUNC_SCL5>,
+					 <PINMUX_GPIO49__FUNC_SDA5>;
+			/* set pull up resistor r1 & r0 */
+			bias-pull-up = <MTK_RSEL_SET_R1R0_11>;
+			/* disable EH feature */
+			drive-strength = <MTK_I2C_EH_DRIVE_000>;
+		};
+	};
+
+	audio_pins_default: audio_default{
+		pins_cmd0_dat {
+			pins = <PINMUX_GPIO3__FUNC_I2S3_DO>,
+				<PINMUX_GPIO5__FUNC_I2S0_BCK>,
+				<PINMUX_GPIO6__FUNC_I2S0_LRCK>,
+				<PINMUX_GPIO7__FUNC_I2S0_DI>,
+				<PINMUX_GPIO170__FUNC_I2S1_BCK>,
+				<PINMUX_GPIO171__FUNC_I2S1_LRCK>,
+				<PINMUX_GPIO172__FUNC_I2S1_DO>,
+				<PINMUX_GPIO173__FUNC_I2S1_MCK>,
+				<PINMUX_GPIO12__FUNC_I2S2_DI2>,
+				<PINMUX_GPIO98__FUNC_I2S2_BCK>,
+				<PINMUX_GPIO101__FUNC_I2S2_LRCK>,
+				<PINMUX_GPIO174__FUNC_I2S2_DI>;
+		};
+	};
+};
+
+&apuart1 {
+	drive-strength = <MTK_DRIVE_6mA>;
+};
+
+&spi_pins_1 {
+	pins_spi {
+		drive-strength = <MTK_DRIVE_6mA>;
+	};
+};
+
+&pinctrl_spi2 {
+	pins_spi2_csb {
+		drive-strength = <MTK_DRIVE_4mA>;
+	};
+	pins_spi2_clk {
+		drive-strength = <MTK_DRIVE_4mA>;
+	};
+	pins_spi2_mosi {
+		drive-strength = <MTK_DRIVE_4mA>;
+	};
+};
+
+&i2c2 {
+	camera_main_af_mtk:camera_main_af@0c {
+		compatible = "mediatek,CAMERA_MAIN_AF";
+		reg = <0x0c>;
+		vcamaf-supply = <&mt_pmic_vldo28_ldo_reg>;
+		status = "okay";
+	};
+};
+
+&pwm {
+	muteled-enable-two-point-cal;
+	invert;
+};
+
+&gpio_privacy {
+	enable-gpio-toggle-duration = <1000>; /* assert MUTE_SET for 1 second duration */
+	auto-toggle-enable-gpio-time = <50>; /* assert MUTE_SET 50ms after button release */
+
+	/* privacy event turns into power event after 3 seconds */
+	privacy-event-max-press-duration = <3000>;
+};
+
+/*End of this file, DO NOT ADD ANYTHING HERE*/

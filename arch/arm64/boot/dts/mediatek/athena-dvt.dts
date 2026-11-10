@@ -1,0 +1,85 @@
+/*
+ * Copyright (C) 2020 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.  */
+
+
+#include "athena.dtsi"
+#include <dt-bindings/clock/mt8183-clk.h>
+
+/ {
+	compatible = "amzn,athena-pvt", "amzn,athena-dvt", "amzn,athena";
+
+	aliases {
+		mute_led_pwm = &pwm;
+	};
+};
+
+&pwm {
+	muteled-enable-two-point-cal;
+	invert;
+};
+
+/* goodix touch screen */
+&i2c1 {
+	gt9xx@5d {
+		compatible = "goodix,gt9xx";
+		reg = <0x5d>;
+		irq-flags = <2>;
+		vdd_ana-supply = <&mt_pmic_vmch_ldo_reg>;
+		int-gpio = <&pio 10 GPIO_ACTIVE_LOW>;
+		rst-gpio = <&pio 158 GPIO_ACTIVE_LOW>;
+		touchscreen-max-id = <11>;
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <1280>;
+		touchscreen-max-w = <512>;
+		touchscreen-max-p = <512>;
+		goodix,slide-wakeup = <0>;
+		goodix,type-a-report = <0>;
+		goodix,driver-send-cfg = <0>;
+		goodix,resume-in-workqueue = <0>;
+		goodix,int-sync = <1>;
+		goodix,swap-x2y = <1>;
+		goodix,esd-protect = <1>;
+		goodix,auto-update-cfg = <1>;
+		goodix,auto-update = <1>;
+		goodix,power-off-sleep = <1>;
+		goodix,pen-suppress-finger = <0>;
+		status = "okay";
+	};
+};
+
+/* Remove temp sensor */
+&i2c3 {
+	tmp103_i2c3_71: tmp103@71 {
+		status = "disabled";
+	};
+	tmp103_i2c3_72: tmp103@72 {
+		status = "disabled";
+	};
+	tmp103_i2c3_73: tmp103@73 {
+		status = "disabled";
+	};
+};
+
+/* Remove lineout detection */
+/delete-node/ &accdet;
+
+/* Remove power rail for HP AMP(PAM8908JER) */
+&i2c4 {
+	tas5805m: tas5805m@2d {
+	/delete-property/ vcn33_wifi-supply;
+	};
+};
+
+&audgpio {
+	/delete-property/ pinctrl-11;
+	/delete-property/ pinctrl-12;
+};

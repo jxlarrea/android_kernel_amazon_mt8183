@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2018 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.  */
+
+
+#include "theia.dtsi"
+#include <dt-bindings/clock/mt8183-clk.h>
+
+/ {
+	compatible = "amzn,theia-proto_v1_2", "amzn,theia";
+
+	gpio_privacy: gpio-privacy {
+		compatible = "gpio-privacy";
+		state-gpios = <&pio 63 GPIO_ACTIVE_HIGH>; /* GATED_STATE (MUTE STATE) - input - 0=muted, 1=not muted */
+		enable-gpio = <&pio 120 GPIO_ACTIVE_LOW>; /* MIC_EN - output - 0=disable mic, 1=enable mic */
+		status="okay";
+
+		input_event {
+			label = "mute";
+			gpios = <&pio 168 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_MUTE>;
+			debounce-interval = <50>;
+			wakeup-source;
+		};
+	};
+};
+
+&i2c4 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	/* accelerometer */
+	bma253_i2c4_18: bma253@18 {
+		compatible = "bma253";
+		reg = <0x18>;
+		interrupt-parent = <&pio>;
+		interrupts = <59 IRQ_TYPE_LEVEL_LOW 59 0>;
+	};
+};
+
+/delete-node/ &tmp103_i2c3_72;
+/*End of this file, DO NOT ADD ANYTHING HERE*/

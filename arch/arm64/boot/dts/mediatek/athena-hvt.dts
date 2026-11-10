@@ -1,0 +1,61 @@
+/*
+ * Copyright (C) 2020 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.  */
+
+
+#include "athena.dtsi"
+#include <dt-bindings/clock/mt8183-clk.h>
+
+/ {
+	compatible = "amzn,athena-hvt", "amzn,athena";
+
+	aliases {
+		mute_led_pwm = &pwm;
+	};
+};
+
+&pwm {
+	muteled-enable-two-point-cal;
+};
+
+&i2c4 {
+	alc5616: alc5616@1b {
+		compatible = "realtek,rt5616";
+		reg = <0x1b>;
+		avdd-supply = <&mt_pmic_vrf18_ldo_reg>;
+		/* hw_mode=1 for differential 0 for Single_end*/
+		hw_mode= <0>;
+		/* Athena Buzz and Pop SW solution */
+		depop_mode= <1>;
+		/* Athena add a AMP control @ GPIO1*/
+		amp_control = <1>;
+	};
+	tas5805m: tas5805m@2d {
+		status = "disabled";
+	};
+};
+
+&accdet {
+	interrupts = <61 IRQ_TYPE_LEVEL_LOW 0 0>;
+	accdet-gpio = <&pio 61 0>;
+	pinctrl-0 = <&accdet_pins_61_default>;
+	pinctrl-1 = <&accdet_pins_61_eint_as_int>;
+};
+&pio {
+	accdet_pins_61_default: eint61default {
+	};
+	accdet_pins_61_eint_as_int: eint61 {
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO61__FUNC_GPIO61>;
+			bias-disable;
+		};
+	};
+};

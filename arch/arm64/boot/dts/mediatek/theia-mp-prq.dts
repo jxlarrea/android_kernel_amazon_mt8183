@@ -1,0 +1,65 @@
+/*
+ * Copyright (C) 2018 MediaTek Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.  */
+
+/*
+ * Copyright (C) 2021 Amazon.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ */
+
+#include "theia-dvt.dtsi"
+#include <dt-bindings/clock/mt8183-clk.h>
+
+/ {
+	compatible = "amzn,theia-mp-prq", "amzn,theia";
+
+	sound: sound {
+		mediatek,audio-codec = <&tas5805m &sy24145a &codec_a>;
+	};
+};
+
+&i2c5 {
+
+	/* Temperature sensor AS6200 */
+	as6200_i2c5_48: as6200@48 {
+		compatible = "ams,as6200";
+		reg = <0x48>;
+		temp_check_low_limit = <60000>;
+		temp_check_high_limit = <87000>;
+		status = "okay";
+	};
+
+	/* TI temp sensor */
+	/delete-node/ tmp1075@5a;
+
+	/*Silergy AMP sy24145 */
+	sy24145a: sy24145a@2a {
+		compatible = "silergy,sy24145a";
+		reg = <0x2a>;
+		status = "okay";
+	};
+
+	/*TI Smart AMP */
+	tas5825x: tas5825x@4d {
+		status = "disabled";
+	};
+};
+
+/*End of this file, DO NOT ADD ANYTHING HERE*/
