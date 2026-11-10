@@ -85,7 +85,7 @@ endif
 
 obj-$(CONFIG_SND_SOC_MTK_BTCVSD) += common_int/
 
-ifeq ($(TARGET_PRODUCT), athena)
+ifeq ($(CONFIG_SND_SOC_MT8183_ATHENA_MACH),y)
   obj-$(CONFIG_SND_SOC_MT8183_ATHENA_MACH) += athena-machine.o
 else ifeq ($(CONFIG_ARCH_MTK_PROJECT),"abc123")
   obj-y += mav-machine.o

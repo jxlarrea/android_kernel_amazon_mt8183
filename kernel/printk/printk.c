@@ -719,8 +719,22 @@ static int syslog_action_restricted(int type)
 	       type != SYSLOG_ACTION_SIZE_BUFFER;
 }
 
+/* open_syslog on the command line lets any process read the kernel log,
+ * for bring-up on a system whose shell cannot. */
+static int open_syslog;
+
+static int __init open_syslog_param(char *str)
+{
+	open_syslog = 1;
+	return 1;
+}
+__setup("open_syslog", open_syslog_param);
+
 int check_syslog_permissions(int type, int source)
 {
+	if (open_syslog)
+		return 0;
+
 	/*
 	 * If this is from /proc/kmsg and we've already opened it, then we've
 	 * already done the capabilities checks at open time.

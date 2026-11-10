@@ -617,11 +617,25 @@ static int __init skip_initramfs_param(char *str)
 }
 __setup("skip_initramfs", skip_initramfs_param);
 
+/* keep_initramfs: run the boot image's ramdisk even when the bootloader
+ * asks to skip it, for bring-up with a recovery ramdisk on the boot
+ * partition. */
+static int __initdata do_keep_initramfs;
+
+static int __init keep_initramfs_param(char *str)
+{
+	if (*str)
+		return 0;
+	do_keep_initramfs = 1;
+	return 1;
+}
+__setup("keep_initramfs", keep_initramfs_param);
+
 static int __init populate_rootfs(void)
 {
 	char *err;
 
-	if (do_skip_initramfs) {
+	if (do_skip_initramfs && !do_keep_initramfs) {
 		if (initrd_start)
 			free_initrd();
 		return default_rootfs();
