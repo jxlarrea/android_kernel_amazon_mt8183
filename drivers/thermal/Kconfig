@@ -453,4 +453,12 @@ config QCOM_SPMI_TEMP_ALARM
 	  real time die temperature if an ADC is present or an estimate of the
 	  temperature based upon the over temperature stage value.
 
+config AMAZON_THERMAL
+	bool "Amazon virtual thermal sensors and state coolers"
+	depends on THERMAL_OF
+	help
+	  Weighted virtual sensors ("amazon,virtual_sensor") and state
+	  holding coolers ("amazon,thermal_cooler") of Amazon's MT8183
+	  Echo Shows, which Fire OS loads as thermal_module.ko.
+
 endif
