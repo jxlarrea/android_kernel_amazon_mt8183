@@ -724,10 +724,57 @@ static int fts_read_parse_touchdata(struct fts_ts_data *data)
     return 0;
 }
 
+/*
+ * Double tap to wake. The touch chip keeps scanning while the screen is off,
+ * so two touches that start within FTS_DOUBLE_TAP_MS of each other wake it.
+ * No other touch reaches Android while the screen is off.
+ */
+#define FTS_DOUBLE_TAP_MS   400
+static bool double_tap = true;
+module_param(double_tap, bool, 0644);
+MODULE_PARM_DESC(double_tap, "Wake the screen on a double tap while it is off");
+static bool dt2w_down;
+static unsigned long dt2w_last_down;
+
+static void fts_double_tap(struct fts_ts_data *data)
+{
+    u8 point_num;
+
+    if (fts_read_touchdata(data))
+        return;
+
+    point_num = data->point_buf[FTS_TOUCH_POINT_NUM] & 0x0F;
+    if (point_num == 0 || point_num > data->pdata->max_touch_number) {
+        dt2w_down = false;
+        return;
+    }
+    if (dt2w_down)
+        return;
+    dt2w_down = true;
+
+    if (dt2w_last_down && time_before(jiffies,
+            dt2w_last_down + msecs_to_jiffies(FTS_DOUBLE_TAP_MS))) {
+        dt2w_last_down = 0;
+        FTS_INFO("Double tap, waking the screen");
+        input_report_key(data->input_dev, KEY_WAKEUP, 1);
+        input_sync(data->input_dev);
+        input_report_key(data->input_dev, KEY_WAKEUP, 0);
+        input_sync(data->input_dev);
+        return;
+    }
+    dt2w_last_down = jiffies;
+}
+
 static void fts_irq_read_report(void)
 {
     int ret = 0;
     struct fts_ts_data *ts_data = fts_data;
+
+    if (ts_data->suspended) {
+        if (double_tap)
+            fts_double_tap(ts_data);
+        return;
+    }
 
 #if FTS_ESDCHECK_EN
     fts_esdcheck_set_intr(1);
@@ -801,6 +848,7 @@ static int fts_input_init(struct fts_ts_data *ts_data)
     __set_bit(EV_KEY, input_dev->evbit);
     __set_bit(BTN_TOUCH, input_dev->keybit);
     __set_bit(INPUT_PROP_DIRECT, input_dev->propbit);
+    input_set_capability(input_dev, EV_KEY, KEY_WAKEUP);
 
     if (pdata->have_key) {
         FTS_INFO("set key capabilities");
@@ -1645,6 +1693,8 @@ static int fts_ts_suspend(struct device *dev)
     }
 
     fts_release_all_finger();
+    dt2w_down = false;
+    dt2w_last_down = 0;
     ts_data->suspended = true;
     FTS_FUNC_EXIT();
     return 0;
